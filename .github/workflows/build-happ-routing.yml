@@ -1,0 +1,50 @@
+name: Build HAPP routing
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "15 4 * * *"
+  push:
+    branches:
+      - main
+    paths:
+      - "shadowrocket.conf"
+      - "rules/*.list"
+      - "scripts/build_happ_routing.py"
+      - ".github/workflows/build-happ-routing.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Build HAPP artifacts
+        run: python scripts/build_happ_routing.py
+
+      - name: Commit and push changes
+        run: |
+          set -euo pipefail
+          if [[ -n "$(git status --porcelain HAPP)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add HAPP/*
+            git commit -m "chore: build happ routing artifacts"
+            git push
+          else
+            echo "No changes to commit."
+          fi
