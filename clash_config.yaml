@@ -62,7 +62,7 @@ proxy-providers:
     interval: 3600
     path: ./proxies/main.yaml
     
-    filter: '(?i)(Vless|Netherlands\s+WL\s+Mobile)'
+    filter: '(?i)Vless' 
      
     exclude-filter: '(?i)(Russia|Belarus|Ukraine)'
 
@@ -132,19 +132,19 @@ proxy-groups:
       - MANUAL-PROXY
       - DIRECT
 
-  # Спец-группа для Google (NL VLESS + UAE VLESS, ручной выбор)
+  # Спец-группа для Google (ручной выбор узлов Canada)
   - name: GOOGLE
     type: select
     use:
       - Main-Sub
-    filter: '(?i)((Netherlands.*Vless|Vless.*Netherlands)|(UAE.*Vless|Vless.*UAE))'
+    filter: '^🇨🇦 CANADA - MONREAL$'
 
-  # Автовыбор (только VLESS, исключаем RU/BY/UA)
+  # Автовыбор (все остальные "чистые" Vless серверы)
   - name: AUTO-MAIN
     type: url-test
     use:
       - Main-Sub
-    filter: '^(?!.*(Russia|Belarus|Ukraine)).*Vless.*$'
+    filter: '^(🇳🇱 NETHERLANDS - AMSTERDAM|🇩🇰 DENMARK - TENDER|🇩🇪 GERMANY - FRANKFURT)$'
     url: 'https://abs.twimg.com/favicon.ico'
     interval: 780
     tolerance: 200
@@ -154,7 +154,7 @@ proxy-groups:
     type: select
     use:
       - Main-Sub
-    filter: '^(?!.*(Russia|Belarus|Ukraine)).*Vless.*$'
+    filter: '^(🇳🇱 NETHERLANDS - AMSTERDAM|🇩🇰 DENMARK - TENDER|🇩🇪 GERMANY - FRANKFURT)$'
 
 # 5. ПРАВИЛА
 rules:

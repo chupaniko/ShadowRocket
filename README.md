@@ -17,7 +17,6 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 ## Что внутри
 
 - `shadowrocket.conf` — основной конфиг для Shadowrocket с автообновлением.
-- `shadowrocket_custom.conf` — кастомный конфиг для GFN/NVIDIA (отдельный `update-url`, без изменения основного).
 - `clash_config.yaml` — локальный YAML для Clash Verge Rev, повторяющий логику Shadowrocket.
 - `rules/` — общий набор списков доменов и IP для маршрутизации.
 
@@ -30,15 +29,10 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
    > В конфиге указан `update-url`, поэтому он будет обновляться автоматически.
 2. **Добавьте подписку** на сервера в Shadowrocket (URL от вашего провайдера).
 3. **Проверьте группы прокси**:
-   - `AUTO-MAIN` — автоматический выбор по URL-тесту (только VLESS, исключает RU/BY/UA).
+   - `AUTO-MAIN` — автоматический выбор по URL-тесту (NL Amsterdam, DK Tender, DE Frankfurt).
    - `MANUAL-PROXY` — ручной выбор из тех же серверов, что и `AUTO-MAIN`.
-   - `GOOGLE` — отдельный ручной выбор для Google/Gemini/YouTube (NL VLESS + UAE VLESS).
-   - `PROXY` — главный переключатель (Select): `AUTO-MAIN`, `MANUAL-PROXY` или `DIRECT`.
-
-Кастомный профиль для GFN/NVIDIA (с `always-real-ip`):
-```
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_custom.conf
-```
+   - `GOOGLE` — отдельный ручной выбор для Google/Gemini/YouTube (Canada Monreal).
+   - `PROXY` — главный переключатель (Select): `MANUAL-PROXY`, `AUTO-MAIN` или `DIRECT`.
 
 ## Clash Verge Rev (Windows)
 
@@ -88,15 +82,14 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 ## Логика `shadowrocket.conf`
 
 ### [General]
-- Базовые сетевые настройки: DNS — NextDNS (DoH), fallback — NextDNS IP → 1.1.1.1/8.8.8.8, IPv6 выключен.
+- Базовые сетевые настройки: DNS — NextDNS IP (76.76.2.0/76.76.10.0), fallback — 1.1.1.1/8.8.8.8, IPv6 выключен.
 - `update-url` указывает на конфиг в репозитории.
 
 ### [Proxy Group]
-- **AUTO-MAIN** — URL-тест с фильтром по имени (только VLESS, исключаем RU/BY/UA):
-  `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `tolerance=200`, `timeout=7`.
+- **AUTO-MAIN** — URL-тест по трём узлам (NL Amsterdam, DK Tender, DE Frankfurt).
 - **MANUAL-PROXY** — ручной выбор из тех же серверов, что и AUTO-MAIN.
-- **GOOGLE** — ручной выбор из отфильтрованного списка для Google/Gemini/YouTube (NL VLESS + UAE VLESS).
-- **PROXY** — Select-группа для ручного выбора между AUTO-MAIN/MANUAL-PROXY/DIRECT.
+- **GOOGLE** — ручной выбор для Google/Gemini/YouTube (Canada Monreal).
+- **PROXY** — Select-группа для ручного выбора между MANUAL-PROXY/AUTO-MAIN/DIRECT.
 
 ### [Rule]
 Порядок важен: правила обрабатываются сверху вниз.
@@ -115,9 +108,8 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 6. **FINAL**
    - Всё остальное — в `PROXY`.
 
-### [Host] / [URL Rewrite]
+### [Host]
 - Статический `localhost`.
-- Редиректы для `nnmclub.to` и `yandex.ru`.
 
 ## Обновление
 
