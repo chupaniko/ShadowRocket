@@ -27,6 +27,7 @@ GEOSITE_COMPILER_REPO = "https://github.com/v2fly/domain-list-community.git"
 ROSCOM_GEOSITE_SOURCE_REPO = "https://github.com/hydraponique/roscomvpn-geosite.git"
 ROSCOM_GEOSITE_TAG = "202602210214"
 ROSCOM_GEOIP_BASE_URL = "https://cdn.jsdelivr.net/gh/hydraponique/roscomvpn-geoip@202602230507/release/geoip.dat"
+ROSCOM_DEFAULT_PROFILE_URL = "https://raw.githubusercontent.com/hydraponique/roscomvpn-routing/main/HAPP/DEFAULT.JSON"
 DEFAULT_DNS_HOSTS = {
     "adfree.dns.nextdns.io": "76.76.2.0",
     "cloudflare-dns.com": "1.1.1.1",
@@ -545,6 +546,14 @@ def commit_sha(repo_root: Path) -> str:
     return run(["git", "-C", str(repo_root), "rev-parse", "HEAD"])
 
 
+def fetch_roscom_profile() -> dict[str, object]:
+    payload = run(["curl", "-fsSL", ROSCOM_DEFAULT_PROFILE_URL])
+    profile = json.loads(payload)
+    if not isinstance(profile, dict):
+        raise RuntimeError("Unexpected roscom profile payload: expected JSON object")
+    return profile
+
+
 def build_profile(
     data: BuildData,
     raw_base: str,
@@ -598,6 +607,14 @@ def build_profile(
         "FakeDNS": "true",
     }
     return profile
+
+
+def profile_to_deeplink(profile: dict[str, object], mode: str) -> tuple[str, str, str]:
+    json_pretty = json.dumps(profile, indent=2, ensure_ascii=False)
+    json_compact = json.dumps(profile, separators=(",", ":"), ensure_ascii=False)
+    encoded = base64.b64encode(json_compact.encode("utf-8")).decode("ascii")
+    deeplink = f"happ://routing/{mode}/{encoded}"
+    return json_pretty, json_compact, deeplink
 
 
 def write_report(
@@ -688,22 +705,26 @@ def main() -> int:
     if not rules_dir.exists():
         raise FileNotFoundError(f"Rules directory not found: {rules_dir}")
 
+    # Pack 1 (default): pure roscom profile, copied as-is from upstream JSON.
+    default_profile = fetch_roscom_profile()
+    default_pretty, _, default_deeplink = profile_to_deeplink(default_profile, args.deeplink_mode)
+    (out_dir / "DEFAULT.JSON").write_text(default_pretty + "\n", encoding="utf-8")
+    (out_dir / "DEFAULT.DEEPLINK").write_text(default_deeplink + "\n", encoding="utf-8")
+
+    # Pack 2 (bonus): local augmentation based on shadowrocket.conf + rules/*.list.
     remote_dns_ip = args.remote_dns_ip
     if "--remote-dns-ip" not in sys.argv:
         remote_dns_ip = extract_remote_dns_ip(conf_path) or args.remote_dns_ip
-
     general_direct_ips = dedupe_preserve(
         extract_skip_proxy_ips(conf_path) + extract_bypass_tun_ips(conf_path)
     )
     data = parse_conf_and_lists(conf_path, rules_dir)
     ensure_bucket_uniques(data)
-
     build_geosite_dat(out_dir, data)
     build_geoip_dat(out_dir, data)
     slug = repo_slug(repo_root)
     raw_base = f"https://cdn.jsdelivr.net/gh/{slug}@main/{args.out_dir.strip('/')}"
-
-    profile = build_profile(
+    bonus_profile = build_profile(
         data=data,
         raw_base=raw_base,
         route_order=args.route_order,
@@ -714,24 +735,20 @@ def main() -> int:
         domestic_dns_type=args.domestic_dns_type,
         general_direct_ips=general_direct_ips,
     )
-
-    json_pretty = json.dumps(profile, indent=2, ensure_ascii=False)
-    json_compact = json.dumps(profile, separators=(",", ":"), ensure_ascii=False)
-    encoded = base64.b64encode(json_compact.encode("utf-8")).decode("ascii")
-    deeplink = f"happ://routing/{args.deeplink_mode}/{encoded}"
-
-    (out_dir / "DEFAULT.JSON").write_text(json_pretty + "\n", encoding="utf-8")
-    (out_dir / "DEFAULT.DEEPLINK").write_text(deeplink + "\n", encoding="utf-8")
+    bonus_profile["Name"] = "ShadowRocket-HAPP-BONUS"
+    bonus_pretty, bonus_compact, bonus_deeplink = profile_to_deeplink(bonus_profile, args.deeplink_mode)
+    (out_dir / "BONUS.JSON").write_text(bonus_pretty + "\n", encoding="utf-8")
+    (out_dir / "BONUS.DEEPLINK").write_text(bonus_deeplink + "\n", encoding="utf-8")
 
     write_report(
         out_path=out_dir / "REPORT.md",
         conf_path=conf_path,
         data=data,
-        json_length=len(json_compact),
-        deeplink_length=len(deeplink),
+        json_length=len(bonus_compact),
+        deeplink_length=len(bonus_deeplink),
         sha=commit_sha(repo_root),
         mode=args.deeplink_mode,
-        profile=profile,
+        profile=bonus_profile,
     )
     return 0
 

@@ -2,18 +2,30 @@
 
 ## Быстрые ссылки
 
-- Deeplink (текстовый файл для копирования):  
+- Минипак (чистый roscom, без аугментации), deeplink:  
   [DEFAULT.DEEPLINK](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/DEFAULT.DEEPLINK)
-- JSON профиль:  
+- Минипак (чистый roscom), JSON:  
   [DEFAULT.JSON](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/DEFAULT.JSON)
+- Бонус-пак (аугментированный), deeplink:  
+  [BONUS.DEEPLINK](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/BONUS.DEEPLINK)
+- Бонус-пак (аугментированный), JSON:  
+  [BONUS.JSON](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/BONUS.JSON)
 - Локально собранные geo-файлы:  
   [geoip.dat](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/geoip.dat)  
   [geosite.dat](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/geosite.dat)
 - Отчет сборки:  
   [REPORT.md](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/REPORT.md)
 
-## Нормативные defaults (зафиксировано)
+## Пакеты
 
+### DEFAULT (минипак)
+
+- `HAPP/DEFAULT.JSON` берется из upstream `roscomvpn-routing/HAPP/DEFAULT.JSON` без локальной аугментации.
+- Нужен как стабильный baseline, если гибридный вариант на конкретной версии HAPP не стартует.
+
+### BONUS (аугментированный)
+
+Ниже все нормативные defaults относятся к `HAPP/BONUS.JSON`:
 - `RemoteDNSType = DoH`
 - `RemoteDNSDomain = https://adfree.dns.nextdns.io/dns-query`
 - `RemoteDNSIP = 76.76.2.0` (из первого `dns-server` в `shadowrocket.conf`)
@@ -31,12 +43,13 @@
 
 ## Что является source of truth
 
+- Для минипака (DEFAULT): upstream JSON `https://raw.githubusercontent.com/hydraponique/roscomvpn-routing/main/HAPP/DEFAULT.JSON`.
 - Базовые параметры сети и порядок правил: `/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/shadowrocket.conf`.
 - Источники доменных/IP списков: `/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/rules/*.list`.
-- Логика трансформации в HAPP: `/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/scripts/build_happ_routing.py`.
+- Логика трансформации в HAPP бонус-пака: `/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/scripts/build_happ_routing.py`.
 - Фактические dropped-экземпляры после сборки: `/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/HAPP/REPORT.md`.
 
-## Матрица соответствий полей HAPP профиля
+## Матрица соответствий полей HAPP профиля (BONUS)
 
 | Ключ HAPP | Как формируется | Источник в SR/rules | Где в коде | Примечание |
 | --- | --- | --- | --- | --- |
@@ -74,7 +87,7 @@
 5. Неподдерживаемые типы помечаются как dropped и попадают в `REPORT.md`.
 6. В bucket-ах `direct/proxy/block` выполняется дедупликация с сохранением порядка.
 7. Собираются локальные `geosite.dat` и `geoip.dat`: geosite компилируется из `roscomvpn-geosite@202602210214/data` + `sr-*`, geoip берется из `roscomvpn-geoip@202602230507` + `sr-*` и затем ужимается до нужных листов.
-8. Формируются `DEFAULT.JSON` и `DEFAULT.DEEPLINK`.
+8. Формируются `BONUS.JSON` и `BONUS.DEEPLINK` (а также `DEFAULT.*` как upstream roscom copy).
 
 ## Неподдерживаемые правила (реестр дропов)
 
@@ -103,7 +116,7 @@ python3 - <<'PY'
 import json
 from pathlib import Path
 
-p = Path("/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/HAPP/DEFAULT.JSON")
+p = Path("/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/HAPP/BONUS.JSON")
 data = json.loads(p.read_text(encoding="utf-8"))
 
 assert data["RouteOrder"] == "block-direct-proxy"
@@ -131,12 +144,12 @@ rg -n "## Dropped USER-AGENT|## Dropped DST-PORT|## Dropped IP-ASN|## Dropped co
 1. `RULE-SET,.../google-all.list,GOOGLE` попадает в proxy bucket (`GOOGLE` трактуется как proxy).
 2. `GEOIP,RU,DIRECT` попадает в `DirectIp` как `geoip:direct`.
 3. В `shadowrocket.conf` отсутствуют QUIC/DoT блокировки через inline `AND` (совместимость с Hysteria2).
-4. `DEFAULT.JSON` отражает defaults из раздела "Нормативные defaults".
+4. `BONUS.JSON` отражает defaults из раздела "Нормативные defaults".
 5. Изменения роутинга синхронно отражены в `shadowrocket.conf` и `clash_config.yaml`.
 
 ## Как добавить в Happ
 
-1. Открой на устройстве с Happ ссылку `DEFAULT.DEEPLINK` (выше).
+1. Для стабильного baseline используй `DEFAULT.DEEPLINK`, для аугментированного варианта — `BONUS.DEEPLINK`.
 2. Скопируй строку `happ://routing/onadd/...` целиком.
 3. Вставь ее в адресную строку Safari и открой.
 4. Подтверди открытие в Happ и добавление маршрутизации.
@@ -145,7 +158,7 @@ rg -n "## Dropped USER-AGENT|## Dropped DST-PORT|## Dropped IP-ASN|## Dropped co
 
 1. Убедись, что Happ установлен и обновлен.
 2. Попробуй открыть deeplink еще раз через Safari (не через встроенный вебвью).
-3. Используй JSON-вариант `DEFAULT.JSON` для ручного импорта в Happ.
+3. Используй JSON-вариант `DEFAULT.JSON` (минипак) или `BONUS.JSON` (аугментация) для ручного импорта в Happ.
 
 ## Локальная пересборка
 
