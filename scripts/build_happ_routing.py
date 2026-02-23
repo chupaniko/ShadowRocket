@@ -28,6 +28,8 @@ ROSCOM_GEOSITE_SOURCE_REPO = "https://github.com/hydraponique/roscomvpn-geosite.
 ROSCOM_GEOSITE_TAG = "202602210214"
 ROSCOM_GEOIP_BASE_URL = "https://cdn.jsdelivr.net/gh/hydraponique/roscomvpn-geoip@202602230507/release/geoip.dat"
 ROSCOM_DEFAULT_PROFILE_URL = "https://raw.githubusercontent.com/hydraponique/roscomvpn-routing/main/HAPP/DEFAULT.JSON"
+DEFAULT_PROFILE_NAME = "роутинг"
+BONUS_PROFILE_NAME = "роутинг+"
 DEFAULT_DNS_HOSTS = {
     "adfree.dns.nextdns.io": "76.76.2.0",
     "cloudflare-dns.com": "1.1.1.1",
@@ -707,6 +709,7 @@ def main() -> int:
 
     # Pack 1 (default): pure roscom profile, copied as-is from upstream JSON.
     default_profile = fetch_roscom_profile()
+    default_profile["Name"] = DEFAULT_PROFILE_NAME
     default_pretty, _, default_deeplink = profile_to_deeplink(default_profile, args.deeplink_mode)
     (out_dir / "DEFAULT.JSON").write_text(default_pretty + "\n", encoding="utf-8")
     (out_dir / "DEFAULT.DEEPLINK").write_text(default_deeplink + "\n", encoding="utf-8")
@@ -735,7 +738,7 @@ def main() -> int:
         domestic_dns_type=args.domestic_dns_type,
         general_direct_ips=general_direct_ips,
     )
-    bonus_profile["Name"] = "ShadowRocket-HAPP-BONUS"
+    bonus_profile["Name"] = BONUS_PROFILE_NAME
     bonus_pretty, bonus_compact, bonus_deeplink = profile_to_deeplink(bonus_profile, args.deeplink_mode)
     (out_dir / "BONUS.JSON").write_text(bonus_pretty + "\n", encoding="utf-8")
     (out_dir / "BONUS.DEEPLINK").write_text(bonus_deeplink + "\n", encoding="utf-8")
