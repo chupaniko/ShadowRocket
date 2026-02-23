@@ -113,7 +113,8 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 
 - Конфиг обновляется автоматически через `update-url`.
 - Списки правил обновляются при обновлении конфига или вручную через Shadowrocket.
-- Антирекламный список `rules/anti_advertising.list` собирается автоматически GitHub Actions (`.github/workflows/sync-lists.yml`) через `scripts/sync_lists.py` с дедупликацией источников OISD + HaGeZi.
+- Списки `rules/*.list` синхронизируются в GitHub Actions (`.github/workflows/build-happ-routing.yml`) через `scripts/sync_lists.py`, после чего в той же джобе пересобираются HAPP-артефакты.
+- Антирекламный список `rules/anti_advertising.list` собирается с дедупликацией источников OISD + HaGeZi.
 
 ## Расширение правил
 

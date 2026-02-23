@@ -10,7 +10,9 @@ on:
     paths:
       - "shadowrocket.conf"
       - "rules/*.list"
+      - "scripts/sync_lists.py"
       - "scripts/build_happ_routing.py"
+      - ".github/workflows/sync-lists.yml"
       - ".github/workflows/build-happ-routing.yml"
 
 permissions:
@@ -18,6 +20,7 @@ permissions:
 
 jobs:
   build:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -33,17 +36,20 @@ jobs:
         with:
           go-version: "1.22"
 
+      - name: Sync rule lists
+        run: python scripts/sync_lists.py --no-pull
+
       - name: Build HAPP artifacts
         run: python scripts/build_happ_routing.py
 
       - name: Commit and push changes
         run: |
           set -euo pipefail
-          if [[ -n "$(git status --porcelain HAPP)" ]]; then
+          if [[ -n "$(git status --porcelain rules HAPP)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add HAPP/*
-            git commit -m "chore: build happ routing artifacts"
+            git add rules/*.list HAPP/*
+            git commit -m "chore: sync rule lists and build happ artifacts"
             git push
           else
             echo "No changes to commit."

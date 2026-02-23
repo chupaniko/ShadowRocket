@@ -10,9 +10,9 @@
   "DomesticDNSType": "DoU",
   "DomesticDNSDomain": "",
   "DomesticDNSIP": "77.88.8.8",
-  "Geoipurl": "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat",
-  "Geositeurl": "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat",
-  "LastUpdated": "1771864687",
+  "Geoipurl": "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/geoip.dat",
+  "Geositeurl": "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/geosite.dat",
+  "LastUpdated": "1771866971",
   "DnsHosts": {
     "adfree.dns.nextdns.io": "76.76.2.0",
     "cloudflare-dns.com": "1.1.1.1",

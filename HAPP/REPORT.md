@@ -2,7 +2,7 @@
 
 ## Source
 - Config: `/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/shadowrocket.conf`
-- Commit: `d19cdb3ee65fa6ee5db1358c125fbe0ef01209c6`
+- Commit: `50c4d26ebd76ae805534ab34d02260a6f15e6c0a`
 
 ## Processed
 - Rules in `[Rule]`: 12
@@ -12,8 +12,8 @@
 
 ## Output
 - Deeplink mode: `onadd`
-- JSON length (compact): 1162
-- Deeplink length: 1573
+- JSON length (compact): 1154
+- Deeplink length: 1561
 - DirectSites: 2
 - ProxySites: 1
 - BlockSites: 0

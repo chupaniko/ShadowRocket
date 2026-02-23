@@ -21,8 +21,8 @@ from urllib.parse import urlparse
 SUPPORTED_SITE_RULES = {"DOMAIN-SUFFIX", "DOMAIN", "DOMAIN-KEYWORD"}
 SUPPORTED_IP_RULES = {"IP-CIDR", "IP-CIDR6", "GEOIP"}
 DEFAULT_REMOTE_DNS_DOMAIN = "https://adfree.dns.nextdns.io/dns-query"
-DEFAULT_GEOIP_URL = "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
-DEFAULT_GEOSITE_URL = "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+LOYALSOLDIER_GEOIP_BASE_URL = "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+GEOSITE_SOURCE_REPO = "https://github.com/v2fly/domain-list-community.git"
 DEFAULT_DNS_HOSTS = {
     "adfree.dns.nextdns.io": "76.76.2.0",
     "cloudflare-dns.com": "1.1.1.1",
@@ -367,7 +367,7 @@ def build_geosite_dat(out_dir: Path, data: BuildData) -> Path:
     with tempfile.TemporaryDirectory(prefix="sr-happ-geosite-") as tmp_dir:
         tmp = Path(tmp_dir)
         repo = tmp / "domain-list-community"
-        run(["git", "clone", "--depth", "1", "https://github.com/v2fly/domain-list-community.git", str(repo)])
+        run(["git", "clone", "--depth", "1", GEOSITE_SOURCE_REPO, str(repo)])
         write_geosite_inputs(repo / "data", data)
         run(["go", "mod", "download"], cwd=repo)
         run(["go", "run", "./", f"--datapath={repo / 'data'}"], cwd=repo)
@@ -399,7 +399,7 @@ def write_geoip_config(geoip_repo: Path, data: BuildData) -> Path:
                 "type": "v2rayGeoIPDat",
                 "action": "add",
                 "args": {
-                    "uri": "https://github.com/v2fly/geoip/releases/latest/download/geoip.dat",
+                    "uri": LOYALSOLDIER_GEOIP_BASE_URL,
                 },
             },
             {
@@ -450,12 +450,25 @@ def build_geoip_dat(out_dir: Path, data: BuildData) -> Path:
         return target
 
 
+def repo_slug(repo_root: Path) -> str:
+    remote = run(["git", "-C", str(repo_root), "remote", "get-url", "origin"]).strip()
+    if remote.endswith(".git"):
+        remote = remote[:-4]
+    if remote.startswith("git@github.com:"):
+        return remote.removeprefix("git@github.com:")
+    marker = "github.com/"
+    if marker in remote:
+        return remote.split(marker, 1)[1]
+    raise RuntimeError(f"Unsupported origin URL format: {remote}")
+
+
 def commit_sha(repo_root: Path) -> str:
     return run(["git", "-C", str(repo_root), "rev-parse", "HEAD"])
 
 
 def build_profile(
     data: BuildData,
+    raw_base: str,
     route_order: str,
     remote_dns_ip: str,
     remote_dns_domain: str,
@@ -486,8 +499,8 @@ def build_profile(
         "DomesticDNSType": domestic_dns_type,
         "DomesticDNSDomain": "",
         "DomesticDNSIP": domestic_dns_ip,
-        "Geoipurl": DEFAULT_GEOIP_URL,
-        "Geositeurl": DEFAULT_GEOSITE_URL,
+        "Geoipurl": f"{raw_base}/geoip.dat",
+        "Geositeurl": f"{raw_base}/geosite.dat",
         "LastUpdated": str(int(time.time())),
         "DnsHosts": DEFAULT_DNS_HOSTS,
         "RouteOrder": route_order,
@@ -603,9 +616,12 @@ def main() -> int:
 
     build_geosite_dat(out_dir, data)
     build_geoip_dat(out_dir, data)
+    slug = repo_slug(repo_root)
+    raw_base = f"https://raw.githubusercontent.com/{slug}/main/{args.out_dir.strip('/')}"
 
     profile = build_profile(
         data=data,
+        raw_base=raw_base,
         route_order=args.route_order,
         remote_dns_ip=remote_dns_ip,
         remote_dns_domain=args.remote_dns_domain,

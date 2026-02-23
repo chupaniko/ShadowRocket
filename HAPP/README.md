@@ -25,7 +25,8 @@
 - `UseChunkFiles = false`
 - `GlobalProxy = true` (все, что не попало в geosite/geoip-матчинг, уходит в proxy-контур)
 - `DnsHosts` содержит bootstrap-записи для NextDNS/Cloudflare
-- `Geoipurl` и `Geositeurl` берутся из `Loyalsoldier` release URL
+- `Geoipurl` и `Geositeurl` указывают на артефакты репозитория (`HAPP/geoip.dat`, `HAPP/geosite.dat`)
+- База для сборки `geoip.dat` тянется из `Loyalsoldier`, затем дополняется локальными `sr-*` правилами
 - timestamp обновляется на каждой сборке (`LastUpdated = unix time`)
 
 ## Что является source of truth
@@ -50,8 +51,8 @@
 | `DomesticDNSType` | `--domestic-dns-type` (дефолт `DoU`) | Не из SR напрямую | `parse_args` + `build_profile` | Домашний контур через DoU |
 | `DomesticDNSDomain` | Константа `""` | Не из SR | `build_profile` | Не используется |
 | `DomesticDNSIP` | Повторяет `DomesticDns` | Не из SR напрямую | `build_profile` | Bootstrap IP domestic DNS |
-| `Geoipurl` | Константа URL Loyalsoldier | Внешний источник geo | `DEFAULT_GEOIP_URL` + `build_profile` | `releases/latest/download/geoip.dat` |
-| `Geositeurl` | Константа URL Loyalsoldier | Внешний источник geo | `DEFAULT_GEOSITE_URL` + `build_profile` | `releases/latest/download/geosite.dat` |
+| `Geoipurl` | `raw_base + "/geoip.dat"` | Артефакт репозитория | `repo_slug` + `build_profile` | Собирается из базы Loyalsoldier + `sr-*` |
+| `Geositeurl` | `raw_base + "/geosite.dat"` | Артефакт репозитория | `repo_slug` + `build_profile` | Собирается из `v2fly/domain-list-community` + `sr-*` |
 | `LastUpdated` | `str(int(time.time()))` | Не из SR | `build_profile` | Unix timestamp сборки |
 | `DnsHosts` | Константа `DEFAULT_DNS_HOSTS` | Не из SR | `DEFAULT_DNS_HOSTS` + `build_profile` | NextDNS + Cloudflare bootstrap |
 | `RouteOrder` | `--route-order` (дефолт `block-direct-proxy`) | Не из SR напрямую | `parse_args` + `build_profile` | Приоритет block перед direct/proxy |
