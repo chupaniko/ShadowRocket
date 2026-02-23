@@ -15,8 +15,8 @@
 ## Логика HAPP
 
 - Основная схема: `RU -> DIRECT`, остальное `-> PROXY`.
-- В HAPP-сборке используются списки `whitelist_direct.list`, `greylist_proxy.list`, `domains_community.list`, `telegram.list`.
-- Списки `google-all.list`, `microsoft.list`, `voice_ports.list` в HAPP не участвуют.
+- В HAPP-сборке используются списки `whitelist_direct.list`, `greylist_proxy.list`, `google-all.list`, `domains_community.list`, `telegram.list`.
+- Списки `microsoft.list`, `voice_ports.list` в HAPP не участвуют.
 - `geoip.dat` собирается как IPv4-only.
 - Приоритет маршрутизации: сначала `DIRECT`, затем `PROXY` (`RouteOrder: direct-proxy-block`).
 - DNS для HAPP берется из `shadowrocket.conf`:

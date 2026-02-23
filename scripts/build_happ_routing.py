@@ -20,7 +20,7 @@ from urllib.parse import urlparse
 
 SUPPORTED_SITE_RULES = {"DOMAIN-SUFFIX", "DOMAIN", "DOMAIN-KEYWORD"}
 SUPPORTED_IP_RULES = {"IP-CIDR", "IP-CIDR6", "GEOIP"}
-HAPP_EXCLUDED_RULESETS = {"google-all.list", "microsoft.list", "voice_ports.list"}
+HAPP_EXCLUDED_RULESETS = {"microsoft.list", "voice_ports.list"}
 HAPP_GEOIP_WANTED_LIST = ["ru", "private", "sr-direct", "sr-proxy"]
 
 
