@@ -76,23 +76,6 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 | `modules/` | Готовые модули для Shadowrocket |
 | `scripts/` | Вспомогательные скрипты |
 
-## HAPP профиль
-
-- Профиль HAPP собирается скриптом `scripts/build_happ_routing.py`.
-- Логика HAPP упрощена: `RU -> DIRECT`, остальное `-> PROXY`.
-- Для HAPP используются списки:
-  - `whitelist_direct.list` (DIRECT)
-  - `greylist_proxy.list` (PROXY)
-  - `google-all.list` (PROXY)
-  - `domains_community.list` (PROXY)
-  - `telegram.list` (PROXY)
-- `microsoft.list` и `voice_ports.list` в HAPP-сборке не используются.
-- DNS для HAPP берется из `[General]` `shadowrocket.conf`:
-  - `dns-server` -> `RemoteDNS`
-  - `fallback-dns-server` -> `DomesticDNS`
-- В HAPP сначала проверяются `DIRECT`-правила (`RouteOrder: direct-proxy-block`), затем `PROXY`.
-- `HAPP/geoip.dat` собирается в режиме IPv4-only.
-
 ## Логика `shadowrocket.conf`
 
 ### [General]
