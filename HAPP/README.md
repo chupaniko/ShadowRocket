@@ -56,7 +56,7 @@
 | `DnsHosts` | Константа `DEFAULT_DNS_HOSTS` | Не из SR | `DEFAULT_DNS_HOSTS` + `build_profile` | NextDNS + Cloudflare bootstrap |
 | `RouteOrder` | `--route-order` (дефолт `block-direct-proxy`) | Не из SR напрямую | `parse_args` + `build_profile` | Приоритет block перед direct/proxy |
 | `DirectSites` | `["geosite:private","geosite:sr-direct"]` | `DIRECT` site-правила | `write_geosite_inputs` + `build_profile` | `sr-direct` строится из поддерживаемых типов |
-| `DirectIp` | `["geoip:private","geoip:ru","geoip:sr-direct"] + direct_geo` | `DIRECT` IP/GEOIP | `build_profile` | Дедупликация с сохранением порядка |
+| `DirectIp` | `["geoip:private","geoip:ru","geoip:sr-direct"] + general-direct-ip + direct_geo` | `DIRECT` IP/GEOIP + IP/CIDR из `skip-proxy` и `bypass-tun` | `extract_general_ips` + `build_profile` | Из `skip-proxy`/`bypass-tun` берутся только IP/CIDR, домены игнорируются |
 | `ProxySites` | `["geosite:sr-proxy"]` | `PROXY/GOOGLE` site-правила | `write_geosite_inputs` + `build_profile` | `GOOGLE` трактуется как proxy |
 | `ProxyIp` | `["geoip:sr-proxy"] + proxy_geo` | `PROXY/GOOGLE` IP/GEOIP | `build_profile` | Дедупликация с сохранением порядка |
 | `BlockSites` | `["geosite:sr-block"]` при наличии block site | `REJECT*` site-правила | `write_geosite_inputs` + `build_profile` | Обычно пусто в текущем профиле |

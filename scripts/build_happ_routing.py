@@ -147,6 +147,34 @@ def extract_remote_dns_ip(conf_path: Path) -> str | None:
     return first
 
 
+def extract_general_ips(conf_path: Path, key: str) -> list[str]:
+    values = extract_general_values(conf_path)
+    raw_value = values.get(key, "")
+    if not raw_value:
+        return []
+
+    ips: list[str] = []
+    for token in (item.strip() for item in raw_value.split(",")):
+        if not token:
+            continue
+        try:
+            if "/" in token:
+                ips.append(normalize_cidr(token))
+            else:
+                ips.append(str(ipaddress.ip_address(token)))
+        except ValueError:
+            continue
+    return dedupe_preserve(ips)
+
+
+def extract_skip_proxy_ips(conf_path: Path) -> list[str]:
+    return extract_general_ips(conf_path, "skip-proxy")
+
+
+def extract_bypass_tun_ips(conf_path: Path) -> list[str]:
+    return extract_general_ips(conf_path, "bypass-tun")
+
+
 def iter_rule_section(conf_path: Path) -> Iterable[tuple[int, str]]:
     in_rule = False
     for idx, raw in enumerate(conf_path.read_text(encoding="utf-8").splitlines(), start=1):
@@ -434,12 +462,15 @@ def build_profile(
     domestic_dns_ip: str,
     remote_dns_type: str,
     domestic_dns_type: str,
+    general_direct_ips: list[str],
 ) -> dict[str, object]:
     direct_geo = dedupe_preserve(data.direct.geo_tags)
     proxy_geo = dedupe_preserve(data.proxy.geo_tags)
     block_geo = dedupe_preserve(data.block.geo_tags)
 
-    direct_ip = dedupe_preserve(["geoip:private", "geoip:ru", "geoip:sr-direct"] + direct_geo)
+    direct_ip = dedupe_preserve(
+        ["geoip:private", "geoip:ru", "geoip:sr-direct"] + general_direct_ips + direct_geo
+    )
     proxy_ip = dedupe_preserve(["geoip:sr-proxy"] + proxy_geo)
     block_ip = dedupe_preserve((["geoip:sr-block"] if data.block.cidrs else []) + block_geo)
 
@@ -564,6 +595,9 @@ def main() -> int:
     if "--remote-dns-ip" not in sys.argv:
         remote_dns_ip = extract_remote_dns_ip(conf_path) or args.remote_dns_ip
 
+    general_direct_ips = dedupe_preserve(
+        extract_skip_proxy_ips(conf_path) + extract_bypass_tun_ips(conf_path)
+    )
     data = parse_conf_and_lists(conf_path, rules_dir)
     ensure_bucket_uniques(data)
 
@@ -578,6 +612,7 @@ def main() -> int:
         domestic_dns_ip=args.domestic_dns_ip,
         remote_dns_type=args.remote_dns_type,
         domestic_dns_type=args.domestic_dns_type,
+        general_direct_ips=general_direct_ips,
     )
 
     json_pretty = json.dumps(profile, indent=2, ensure_ascii=False)
