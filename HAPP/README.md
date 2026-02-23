@@ -56,7 +56,7 @@
 | `DnsHosts` | Константа `DEFAULT_DNS_HOSTS` | Не из SR | `DEFAULT_DNS_HOSTS` + `build_profile` | NextDNS + Cloudflare bootstrap |
 | `RouteOrder` | `--route-order` (дефолт `block-direct-proxy`) | Не из SR напрямую | `parse_args` + `build_profile` | Приоритет block перед direct/proxy |
 | `DirectSites` | `["geosite:private","geosite:sr-direct"]` | `DIRECT` site-правила | `write_geosite_inputs` + `build_profile` | `sr-direct` строится из поддерживаемых типов |
-| `DirectIp` | `["geoip:private","geoip:ru","geoip:sr-direct"] + general-direct-ip + direct_geo` | `DIRECT` IP/GEOIP + IP/CIDR из `skip-proxy` и `bypass-tun` | `extract_general_ips` + `build_profile` | Из `skip-proxy`/`bypass-tun` берутся только IP/CIDR, домены игнорируются |
+| `DirectIp` | `["geoip:private","geoip:ru","geoip:sr-direct"] + general-direct-ip + direct_geo` | `DIRECT` IP/GEOIP + IP/CIDR из `skip-proxy` и `bypass-tun` | `extract_general_ips` + `build_profile` | `geoip:*` и CIDR/IP одновременно |
 | `ProxySites` | `["geosite:sr-proxy"]` | `PROXY/GOOGLE` site-правила | `write_geosite_inputs` + `build_profile` | `GOOGLE` трактуется как proxy |
 | `ProxyIp` | `["geoip:sr-proxy"] + proxy_geo` | `PROXY/GOOGLE` IP/GEOIP | `build_profile` | Дедупликация с сохранением порядка |
 | `BlockSites` | `["geosite:sr-block"]` при наличии block site | `REJECT*` site-правила | `write_geosite_inputs` + `build_profile` | Обычно пусто в текущем профиле |
@@ -127,7 +127,7 @@ rg -n "## Dropped USER-AGENT|## Dropped DST-PORT|## Dropped IP-ASN|## Dropped co
 ## Сценарии приёмки
 
 1. `RULE-SET,.../google-all.list,GOOGLE` попадает в proxy bucket (`GOOGLE` трактуется как proxy).
-2. `GEOIP,RU,DIRECT` попадает в `DirectIp`.
+2. `GEOIP,RU,DIRECT` попадает в `DirectIp` как `geoip:ru`.
 3. В `shadowrocket.conf` отсутствуют QUIC/DoT блокировки через inline `AND` (совместимость с Hysteria2).
 4. `DEFAULT.JSON` отражает defaults из раздела "Нормативные defaults".
 5. Изменения роутинга синхронно отражены в `shadowrocket.conf` и `clash_config.yaml`.
