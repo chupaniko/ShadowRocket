@@ -29,10 +29,10 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
    > В конфиге указан `update-url`, поэтому он будет обновляться автоматически.
 2. **Добавьте подписку** на сервера в Shadowrocket (URL от вашего провайдера).
 3. **Проверьте группы прокси**:
-   - `AUTO-MAIN` — автоматический выбор по URL-тесту (исключает RU/BY/UA, VLESS + `Netherlands WL Mobile`).
+   - `AUTO-MAIN` — автоматический выбор по URL-тесту (только VLESS, исключает RU/BY/UA).
    - `MANUAL-PROXY` — ручной выбор из тех же серверов, что и `AUTO-MAIN`.
    - `GOOGLE` — отдельный ручной выбор для Google/Gemini/YouTube (NL VLESS + UAE VLESS).
-   - `PROXY` — главный переключатель (Select): `AUTO-MAIN`, `MANUAL-PROXY`, `GOOGLE` или `DIRECT`.
+   - `PROXY` — главный переключатель (Select): `AUTO-MAIN`, `MANUAL-PROXY` или `DIRECT`.
 
 ## Clash Verge Rev (Windows)
 
@@ -83,10 +83,10 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 - `update-url` указывает на конфиг в репозитории.
 
 ### [Proxy Group]
-- **AUTO-MAIN** — URL-тест с фильтром по имени (исключаем Russia/Belarus/Ukraine, оставляем VLESS + `Netherlands WL Mobile`).
+- **AUTO-MAIN** — URL-тест с фильтром по имени (только VLESS, исключаем RU/BY/UA).
 - **MANUAL-PROXY** — ручной выбор из тех же серверов, что и AUTO-MAIN.
 - **GOOGLE** — ручной выбор из отфильтрованного списка для Google/Gemini/YouTube (NL VLESS + UAE VLESS).
-- **PROXY** — Select-группа для ручного выбора между AUTO-MAIN/MANUAL-PROXY/GOOGLE/DIRECT.
+- **PROXY** — Select-группа для ручного выбора между AUTO-MAIN/MANUAL-PROXY/DIRECT.
 
 ### [Rule]
 Порядок важен: правила обрабатываются сверху вниз.
