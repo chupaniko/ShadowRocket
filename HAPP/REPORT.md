@@ -1,8 +1,8 @@
 # HAPP Routing Build Report
 
 ## Source
-- Config: `/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/shadowrocket.conf`
-- Commit: `f9374e490d7700a1141def38a0c58a1653ffb320`
+- Config: `/home/runner/work/ShadowRocket/ShadowRocket/shadowrocket.conf`
+- Commit: `c2394c2945b661e4e3f5c291df89641975adbfa0`
 
 ## Processed
 - Rules in `[Rule]`: 12
