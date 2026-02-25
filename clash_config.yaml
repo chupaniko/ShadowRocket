@@ -68,8 +68,8 @@ proxy-providers:
 
     health-check:
       enable: true
-      interval: 600
-      url: http://www.gstatic.com/generate_204
+      interval: 780
+      url: https://abs.twimg.com/favicon.ico
 
 rule-providers:
   whitelist_direct:
@@ -145,9 +145,9 @@ proxy-groups:
     use:
       - Main-Sub
     filter: '^(?!.*(Russia|Belarus|Ukraine)).*Vless.*$'
-    url: 'http://www.gstatic.com/generate_204'
-    interval: 600
-    tolerance: 100
+    url: 'https://abs.twimg.com/favicon.ico'
+    interval: 780
+    tolerance: 200
 
   # Мануал-прокси (ручной выбор, те же серверы что и в AUTO-MAIN)
   - name: MANUAL-PROXY

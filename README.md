@@ -37,6 +37,8 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 ## Clash Verge Rev (Windows)
 
 > Используется локальный `clash_config.yaml`, который повторяет логику `shadowrocket.conf`.
+> Для автопроверки серверов секции `proxy-providers.Main-Sub.health-check` и `proxy-groups.AUTO-MAIN`
+> используют `https://abs.twimg.com/favicon.ico` (интервал 780; для `AUTO-MAIN` tolerance 200).
 > В него нужно вручную вставить ссылку на вашу подписку.
 
 1. **Скачайте Clash Verge Rev**:  
@@ -83,7 +85,8 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 - `update-url` указывает на конфиг в репозитории.
 
 ### [Proxy Group]
-- **AUTO-MAIN** — URL-тест с фильтром по имени (только VLESS, исключаем RU/BY/UA).
+- **AUTO-MAIN** — URL-тест с фильтром по имени (только VLESS, исключаем RU/BY/UA):
+  `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `tolerance=200`, `timeout=7`.
 - **MANUAL-PROXY** — ручной выбор из тех же серверов, что и AUTO-MAIN.
 - **GOOGLE** — ручной выбор из отфильтрованного списка для Google/Gemini/YouTube (NL VLESS + UAE VLESS).
 - **PROXY** — Select-группа для ручного выбора между AUTO-MAIN/MANUAL-PROXY/DIRECT.
