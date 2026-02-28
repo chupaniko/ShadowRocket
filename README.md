@@ -17,6 +17,7 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 ## Что внутри
 
 - `shadowrocket.conf` — основной конфиг для Shadowrocket с автообновлением.
+- `shadowrocket_custom.conf` — кастомный конфиг для GFN/NVIDIA (отдельный `update-url`, без изменения основного).
 - `clash_config.yaml` — локальный YAML для Clash Verge Rev, повторяющий логику Shadowrocket.
 - `rules/` — общий набор списков доменов и IP для маршрутизации.
 
@@ -33,6 +34,11 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
    - `MANUAL-PROXY` — ручной выбор из тех же серверов, что и `AUTO-MAIN`.
    - `GOOGLE` — отдельный ручной выбор для Google/Gemini/YouTube (NL VLESS + UAE VLESS).
    - `PROXY` — главный переключатель (Select): `AUTO-MAIN`, `MANUAL-PROXY` или `DIRECT`.
+
+Кастомный профиль для GFN/NVIDIA (с `always-real-ip`):
+```
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_custom.conf
+```
 
 ## Clash Verge Rev (Windows)
 
@@ -73,6 +79,7 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 | Путь | Назначение |
 | --- | --- |
 | `shadowrocket.conf` | Основной конфиг для Shadowrocket |
+| `shadowrocket_custom.conf` | Кастомный конфиг Shadowrocket для GFN/NVIDIA |
 | `clash_config.yaml` | Локальный конфиг для Clash Verge Rev |
 | `rules/` | Списки доменов/IP для маршрутизации |
 | `modules/` | Готовые модули для Shadowrocket |
@@ -125,6 +132,10 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 Для анти-рекламы можно использовать модуль `modules/anti_advertising.module` по ссылке:
 ```
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising.module
+```
+Или кастомный модуль с локальными исключениями для GFN/NVIDIA:
+```
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising_custom.module
 ```
 Модуль подключает единый список репозитория:
 ```
