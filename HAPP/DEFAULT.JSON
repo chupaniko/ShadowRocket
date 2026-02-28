@@ -10,9 +10,9 @@
   "DomesticDNSType": "DoU",
   "DomesticDNSDomain": "https://common.dot.dns.yandex.net/dns-query",
   "DomesticDNSIP": "77.88.8.8",
-  "Geoipurl": "https://cdn.jsdelivr.net/gh/hydraponique/roscomvpn-geoip@202602270455/release/geoip.dat",
-  "Geositeurl": "https://cdn.jsdelivr.net/gh/hydraponique/roscomvpn-geosite@202602210214/release/geosite.dat",
-  "LastUpdated": "1772168179",
+  "Geoipurl": "https://cdn.jsdelivr.net/gh/hydraponique/roscomvpn-geoip@202602280422/release/geoip.dat",
+  "Geositeurl": "https://cdn.jsdelivr.net/gh/hydraponique/roscomvpn-geosite@202602280006/release/geosite.dat",
+  "LastUpdated": "1772252643",
   "DnsHosts": {},
   "RouteOrder": "block-proxy-direct",
   "DirectSites": [
@@ -25,6 +25,7 @@
     "geosite:riot",
     "geosite:escapefromtarkov",
     "geosite:steam",
+    "geosite:origin",
     "geosite:twitch",
     "geosite:pinterest",
     "geosite:faceit"
