@@ -538,6 +538,15 @@ def prepare_hydra_geoip_inputs(geoip_repo: Path, hydra_repo: Path) -> None:
             raise RuntimeError(f"Missing required hydraponique file: {name}")
         shutil.copy2(source, geoip_repo / name)
 
+    whitelist_sources = (
+        hydra_repo / "whitelist.txt",
+        hydra_repo / "release" / "text" / "whitelist.txt",
+    )
+    whitelist_source = next((path for path in whitelist_sources if path.exists()), None)
+    if whitelist_source is None:
+        raise RuntimeError("Missing required hydraponique file: whitelist.txt")
+    shutil.copy2(whitelist_source, geoip_repo / "whitelist.txt")
+
     for target_name, url in HYDRA_GEOIP_EXTERNAL_SOURCES.items():
         fetch_to_file(url, geoip_repo / target_name)
 
