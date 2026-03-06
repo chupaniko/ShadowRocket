@@ -7,6 +7,7 @@ import argparse
 import base64
 import ipaddress
 import json
+import shlex
 import shutil
 import subprocess
 import sys
@@ -112,12 +113,37 @@ def run(cmd: list[str], cwd: Path | None = None) -> str:
     result = subprocess.run(
         cmd,
         cwd=str(cwd) if cwd else None,
-        check=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
     )
+    if result.returncode != 0:
+        detail = result.stderr.strip() or result.stdout.strip() or f"exit code {result.returncode}"
+        raise RuntimeError(f"Command failed: {shlex.join(cmd)}\n{detail}")
     return result.stdout.strip()
+
+
+def run_with_retry(
+    cmd: list[str],
+    cwd: Path | None = None,
+    attempts: int = 3,
+    delay_seconds: float = 2.0,
+) -> str:
+    last_error: RuntimeError | None = None
+    for attempt in range(1, attempts + 1):
+        try:
+            return run(cmd, cwd=cwd)
+        except RuntimeError as exc:
+            last_error = exc
+            if attempt == attempts:
+                break
+            print(
+                f"[retry {attempt}/{attempts}] {shlex.join(cmd)} failed, retrying in {delay_seconds * attempt:.1f}s",
+                file=sys.stderr,
+            )
+            time.sleep(delay_seconds * attempt)
+    assert last_error is not None
+    raise last_error
 
 
 def parse_args() -> argparse.Namespace:
@@ -441,8 +467,8 @@ def build_geosite_dat(out_dir: Path, data: BuildData, output_name: str = BONUS_G
         repo = tmp / "domain-list-community-compiler"
         roscom_repo = tmp / "roscomvpn-geosite"
         data_dir = tmp / "data"
-        run(["git", "clone", "--depth", "1", GEOSITE_COMPILER_REPO, str(repo)])
-        run(
+        run_with_retry(["git", "clone", "--depth", "1", GEOSITE_COMPILER_REPO, str(repo)])
+        run_with_retry(
             [
                 "git",
                 "clone",
@@ -456,7 +482,7 @@ def build_geosite_dat(out_dir: Path, data: BuildData, output_name: str = BONUS_G
         )
         overlay_roscom_geosite_data(data_dir, roscom_repo / "data")
         write_geosite_inputs(data_dir, data)
-        run(["go", "mod", "download"], cwd=repo)
+        run_with_retry(["go", "mod", "download"], cwd=repo)
         run(["go", "run", "./", f"--datapath={data_dir}", f"--outputname={output_name}"], cwd=repo)
         candidates = [repo / output_name, repo / "output" / "dat" / output_name, repo / "dlc.dat", repo / "output" / "dat" / "dlc.dat"]
         source = next((path for path in candidates if path.exists()), None)
@@ -469,7 +495,11 @@ def build_geosite_dat(out_dir: Path, data: BuildData, output_name: str = BONUS_G
 
 def fetch_to_file(url: str, dest: Path) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
-    run(["curl", "-fsSL", "--retry", "3", "--retry-delay", "2", "--retry-connrefused", "-o", str(dest), url])
+    run_with_retry(
+        ["curl", "-fsSL", "--retry", "5", "--retry-delay", "2", "--retry-connrefused", "-o", str(dest), url],
+        attempts=3,
+        delay_seconds=3.0,
+    )
 
 
 def write_geoip_bonus_config(geoip_repo: Path, data: BuildData) -> Path:
@@ -531,73 +561,119 @@ def write_geoip_bonus_config(geoip_repo: Path, data: BuildData) -> Path:
     return config_path
 
 
+def sync_hydra_text_inputs(geoip_repo: Path, hydra_repo: Path) -> None:
+    config = json.loads((geoip_repo / "config.json").read_text(encoding="utf-8"))
+    inputs = config.get("input", [])
+    if not isinstance(inputs, list):
+        raise RuntimeError("Unexpected hydraponique config.json format: missing input[]")
+
+    for item in inputs:
+        if not isinstance(item, dict) or item.get("type") != "text":
+            continue
+        args = item.get("args", {})
+        if not isinstance(args, dict):
+            continue
+        uri = args.get("uri")
+        if not isinstance(uri, str) or not uri.startswith("./") or not uri.endswith(".txt"):
+            continue
+
+        relative = Path(uri.removeprefix("./"))
+        if relative.is_absolute() or len(relative.parts) != 1:
+            continue
+
+        dest = geoip_repo / relative.name
+        if dest.exists():
+            continue
+
+        candidates = (
+            hydra_repo / relative.name,
+            hydra_repo / "release" / "text" / relative.name,
+        )
+        source = next((path for path in candidates if path.exists()), None)
+        if source is not None:
+            shutil.copy2(source, dest)
+            continue
+
+        if relative.name.startswith("CUSTOM-"):
+            dest.write_text("", encoding="utf-8")
+            continue
+
+        raise RuntimeError(f"Missing required hydraponique file referenced by config.json: {relative.name}")
+
+
 def prepare_hydra_geoip_inputs(geoip_repo: Path, hydra_repo: Path) -> None:
     for name in ("config.json", "ipset_ops.py", "CUSTOM-LIST-ADD.txt", "CUSTOM-LIST-DEL.txt"):
         source = hydra_repo / name
         if not source.exists():
             raise RuntimeError(f"Missing required hydraponique file: {name}")
         shutil.copy2(source, geoip_repo / name)
-
-    whitelist_sources = (
-        hydra_repo / "whitelist.txt",
-        hydra_repo / "release" / "text" / "whitelist.txt",
-    )
-    whitelist_source = next((path for path in whitelist_sources if path.exists()), None)
-    if whitelist_source is None:
-        raise RuntimeError("Missing required hydraponique file: whitelist.txt")
-    shutil.copy2(whitelist_source, geoip_repo / "whitelist.txt")
-
-    for target_name, url in HYDRA_GEOIP_EXTERNAL_SOURCES.items():
-        fetch_to_file(url, geoip_repo / target_name)
+    sync_hydra_text_inputs(geoip_repo, hydra_repo)
 
     prepare_path = geoip_repo / "tmp" / "text" / "prepare.txt"
+    final_path = geoip_repo / "tmp" / "text" / "final.txt"
     prepare_path.parent.mkdir(parents=True, exist_ok=True)
-    source_files = (
-        "geolite_ru.lst",
-        "geolite_by.lst",
-        "ipinfo_ru.lst",
-        "ipinfo_by.lst",
-        "dbip_ru.lst",
-        "dbip_by.lst",
-        "CUSTOM-LIST-ADD.txt",
-    )
-    with prepare_path.open("w", encoding="utf-8") as out:
-        for file_name in source_files:
-            src = geoip_repo / file_name
-            if not src.exists():
-                continue
-            text = src.read_text(encoding="utf-8", errors="ignore")
-            out.write(text)
-            if not text.endswith("\n"):
-                out.write("\n")
 
-    b_group = ",".join(
-        [
-            "./refilter.txt",
-            "./antifilternetwork.txt",
-            "./antifilterdownloadcommunity.txt",
-            "./refiltercommunity.txt",
-            "./antifilternetworkcommunity.txt",
-            "./cdn.lst",
-            "./merged.sum",
-            "./CUSTOM-LIST-DEL.txt",
-        ]
-    )
-    run(
-        [
-            "python3",
-            "ipset_ops.py",
-            "--mode",
-            "diff",
-            "--A",
-            "./tmp/text/prepare.txt",
-            "--B",
-            b_group,
-            "--out",
-            "./tmp/text/final.txt",
-        ],
-        cwd=geoip_repo,
-    )
+    try:
+        for target_name, url in HYDRA_GEOIP_EXTERNAL_SOURCES.items():
+            fetch_to_file(url, geoip_repo / target_name)
+
+        source_files = (
+            "geolite_ru.lst",
+            "geolite_by.lst",
+            "ipinfo_ru.lst",
+            "ipinfo_by.lst",
+            "dbip_ru.lst",
+            "dbip_by.lst",
+            "CUSTOM-LIST-ADD.txt",
+        )
+        with prepare_path.open("w", encoding="utf-8") as out:
+            for file_name in source_files:
+                src = geoip_repo / file_name
+                if not src.exists():
+                    continue
+                text = src.read_text(encoding="utf-8", errors="ignore")
+                out.write(text)
+                if not text.endswith("\n"):
+                    out.write("\n")
+
+        b_group = ",".join(
+            [
+                "./refilter.txt",
+                "./antifilternetwork.txt",
+                "./antifilterdownloadcommunity.txt",
+                "./refiltercommunity.txt",
+                "./antifilternetworkcommunity.txt",
+                "./cdn.lst",
+                "./merged.sum",
+                "./CUSTOM-LIST-DEL.txt",
+            ]
+        )
+        run(
+            [
+                "python3",
+                "ipset_ops.py",
+                "--mode",
+                "diff",
+                "--A",
+                "./tmp/text/prepare.txt",
+                "--B",
+                b_group,
+                "--out",
+                "./tmp/text/final.txt",
+            ],
+            cwd=geoip_repo,
+        )
+    except RuntimeError as exc:
+        fallback_direct = hydra_repo / "release" / "text" / "direct.txt"
+        if not fallback_direct.exists():
+            raise RuntimeError(
+                f"Failed to prepare live geoip inputs and fallback direct.txt is missing\n{exc}"
+            ) from exc
+        shutil.copy2(fallback_direct, final_path)
+        print(
+            f"Warning: using fallback release/text/direct.txt for geoip input because live sources failed.\n{exc}",
+            file=sys.stderr,
+        )
 
 
 def build_geoip_dat(out_dir: Path, data: BuildData, output_name: str = BONUS_GEOIP_FILENAME) -> Path:
@@ -605,9 +681,9 @@ def build_geoip_dat(out_dir: Path, data: BuildData, output_name: str = BONUS_GEO
         tmp = Path(tmp_dir)
         geoip_repo = tmp / "geoip"
         hydra_repo = tmp / "roscomvpn-geoip"
-        run(["git", "clone", "--depth", "1", "https://github.com/v2fly/geoip.git", str(geoip_repo)])
-        run(["git", "clone", "--depth", "1", ROSCOM_GEOIP_SOURCE_REPO, str(hydra_repo)])
-        run(["go", "mod", "download"], cwd=geoip_repo)
+        run_with_retry(["git", "clone", "--depth", "1", "https://github.com/v2fly/geoip.git", str(geoip_repo)])
+        run_with_retry(["git", "clone", "--depth", "1", ROSCOM_GEOIP_SOURCE_REPO, str(hydra_repo)])
+        run_with_retry(["go", "mod", "download"], cwd=geoip_repo)
         run(["go", "build", "-o", "geoip"], cwd=geoip_repo)
         prepare_hydra_geoip_inputs(geoip_repo, hydra_repo)
         config_path = write_geoip_bonus_config(geoip_repo, data)
@@ -637,14 +713,11 @@ def commit_sha(repo_root: Path) -> str:
 
 
 def fetch_roscom_profile_payload() -> str:
-    result = subprocess.run(
-        ["curl", "-fsSL", ROSCOM_DEFAULT_PROFILE_URL],
-        check=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
+    return run_with_retry(
+        ["curl", "-fsSL", "--retry", "5", "--retry-delay", "2", "--retry-connrefused", ROSCOM_DEFAULT_PROFILE_URL],
+        attempts=3,
+        delay_seconds=3.0,
     )
-    return result.stdout
 
 
 def parse_json_object(payload: str) -> dict[str, object]:
