@@ -29,10 +29,10 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
    > В конфиге указан `update-url`, поэтому он будет обновляться автоматически.
 2. **Добавьте подписку** на сервера в Shadowrocket (URL от вашего провайдера).
 3. **Проверьте группы прокси**:
-   - `AUTO-MAIN` — автоматический выбор по URL-тесту (NL Amsterdam, DK Tender, DE Frankfurt).
+   - `AUTO-MAIN` — автоматический выбор по URL-тесту (исключает RU/BY/UA, только VLESS).
    - `MANUAL-PROXY` — ручной выбор из тех же серверов, что и `AUTO-MAIN`.
-   - `GOOGLE` — отдельный ручной выбор для Google/Gemini/YouTube (Canada Monreal).
-   - `PROXY` — главный переключатель (Select): `MANUAL-PROXY`, `AUTO-MAIN` или `DIRECT`.
+   - `GOOGLE` — отдельный ручной выбор для Google/Gemini/YouTube (NL VLESS + UAE VLESS).
+   - `PROXY` — главный переключатель (Select): `AUTO-MAIN`, `MANUAL-PROXY`, `GOOGLE` или `DIRECT`.
 
 ## Clash Verge Rev (Windows)
 
@@ -79,14 +79,14 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 ## Логика `shadowrocket.conf`
 
 ### [General]
-- Базовые сетевые настройки: DNS — NextDNS IP (76.76.2.0/76.76.10.0), fallback — 1.1.1.1/8.8.8.8, IPv6 выключен.
+- Базовые сетевые настройки: DNS — NextDNS (DoH), fallback — NextDNS IP → 1.1.1.1/8.8.8.8, IPv6 выключен.
 - `update-url` указывает на конфиг в репозитории.
 
 ### [Proxy Group]
-- **AUTO-MAIN** — URL-тест по трём узлам (NL Amsterdam, DK Tender, DE Frankfurt).
+- **AUTO-MAIN** — URL-тест с фильтром по имени (исключаем Russia/Belarus/Ukraine, оставляем VLESS).
 - **MANUAL-PROXY** — ручной выбор из тех же серверов, что и AUTO-MAIN.
-- **GOOGLE** — ручной выбор для Google/Gemini/YouTube (Canada Monreal).
-- **PROXY** — Select-группа для ручного выбора между MANUAL-PROXY/AUTO-MAIN/DIRECT.
+- **GOOGLE** — ручной выбор из отфильтрованного списка для Google/Gemini/YouTube (NL VLESS + UAE VLESS).
+- **PROXY** — Select-группа для ручного выбора между AUTO-MAIN/MANUAL-PROXY/GOOGLE/DIRECT.
 
 ### [Rule]
 Порядок важен: правила обрабатываются сверху вниз.
@@ -107,8 +107,9 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 7. **FINAL**
    - Всё остальное — в `PROXY`.
 
-### [Host]
+### [Host] / [URL Rewrite]
 - Статический `localhost`.
+- Редиректы для `nnmclub.to` и `yandex.ru`.
 
 ## Обновление
 

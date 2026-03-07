@@ -133,19 +133,19 @@ proxy-groups:
       - GOOGLE
       - DIRECT
 
-  # Спец-группа для Google (ручной выбор узлов Canada)
+  # Спец-группа для Google (NL VLESS + UAE VLESS, ручной выбор)
   - name: GOOGLE
     type: select
     use:
       - Main-Sub
-    filter: '^🇨🇦 CANADA - MONREAL$'
+    filter: '(?i)((Netherlands.*Vless|Vless.*Netherlands)|(UAE.*Vless|Vless.*UAE))'
 
   # Автовыбор (все остальные "чистые" Vless серверы)
   - name: AUTO-MAIN
     type: url-test
     use:
       - Main-Sub
-    filter: '^(🇳🇱 NETHERLANDS - AMSTERDAM|🇩🇰 DENMARK - TENDER|🇩🇪 GERMANY - FRANKFURT)$'
+    filter: '.*' 
     url: 'http://www.gstatic.com/generate_204'
     interval: 600
     tolerance: 100
@@ -155,7 +155,7 @@ proxy-groups:
     type: select
     use:
       - Main-Sub
-    filter: '^(🇳🇱 NETHERLANDS - AMSTERDAM|🇩🇰 DENMARK - TENDER|🇩🇪 GERMANY - FRANKFURT)$'
+    filter: '.*'
 
 # 5. ПРАВИЛА
 rules:
