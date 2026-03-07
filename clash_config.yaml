@@ -62,6 +62,10 @@ proxy-providers:
     interval: 3600
     path: ./proxies/main.yaml
     
+    filter: '(?i)Vless' 
+     
+    exclude-filter: '(?i)(Russia|Belarus|Ukraine)'
+
     health-check:
       enable: true
       interval: 600
@@ -134,14 +138,14 @@ proxy-groups:
     type: select
     use:
       - Main-Sub
-    filter: '(?i)^(🇨🇦\s*)?CANADA\b.*'
+    filter: '^🇨🇦 CANADA - MONREAL$'
 
   # Автовыбор (все остальные "чистые" Vless серверы)
   - name: AUTO-MAIN
     type: url-test
     use:
       - Main-Sub
-    filter: '.*'
+    filter: '^(🇳🇱 NETHERLANDS - AMSTERDAM|🇩🇰 DENMARK - TENDER|🇩🇪 GERMANY - FRANKFURT)$'
     url: 'http://www.gstatic.com/generate_204'
     interval: 600
     tolerance: 100
@@ -151,10 +155,12 @@ proxy-groups:
     type: select
     use:
       - Main-Sub
-    filter: '.*'
+    filter: '^(🇳🇱 NETHERLANDS - AMSTERDAM|🇩🇰 DENMARK - TENDER|🇩🇪 GERMANY - FRANKFURT)$'
 
 # 5. ПРАВИЛА
 rules:
+  - AND,((NETWORK,UDP),(DST-PORT,443)),REJECT
+  - AND,((NETWORK,UDP),(DST-PORT,853)),REJECT
   - RULE-SET,google_all,GOOGLE
   - RULE-SET,whitelist_direct,DIRECT
   - RULE-SET,greylist_proxy,PROXY
@@ -165,8 +171,6 @@ rules:
   - DOMAIN-SUFFIX,ru,DIRECT
   - DOMAIN-SUFFIX,xn--p1ai,DIRECT
   - DOMAIN-SUFFIX,su,DIRECT
-  - AND,((NETWORK,UDP),(DST-PORT,443)),REJECT
-  - AND,((NETWORK,UDP),(DST-PORT,853)),REJECT
   - GEOIP,RU,DIRECT
   - GEOIP,private,DIRECT
   - MATCH,PROXY
