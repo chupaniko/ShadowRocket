@@ -2,7 +2,7 @@
 
 ## Source
 - Config: `/home/runner/work/ShadowRocket/ShadowRocket/shadowrocket.conf`
-- Commit: `99c42b0f8637c0aa682ac666ebda7ada5450dcae`
+- Commit: `2aec5fe18ee32b6d376fafe6735b3d4c65d26fd4`
 
 ## Processed
 - Rules in `[Rule]`: 10
@@ -12,8 +12,8 @@
 
 ## Output
 - Deeplink mode: `onadd`
-- JSON length (compact): 1506
-- Deeplink length: 2041
+- JSON length (compact): 1502
+- Deeplink length: 2033
 - DirectSites: 13
 - ProxySites: 5
 - BlockSites: 3
